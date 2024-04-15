@@ -8,13 +8,14 @@ import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
 import study.datajpa.dto.MemberDto;
+import study.datajpa.dto.UsernameOnlyDto;
 import study.datajpa.entity.Member;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
-public interface MemberRepository extends JpaRepository<Member, Long> {
+public interface MemberRepository extends JpaRepository<Member, Long>, MemberRepositoryCustom, JpaSpecificationExecutor<Member> {
 
     // 알아서 이름에 맞는 SQL문을 작성한다... ㄷㄷㄷㄷ => entity 스펙바뀌면 런타임시 에러가난다. 함꼐 바꿔줘야함.
     List<Member> findByUsernameAndAgeGreaterThan(String username, int age);
@@ -83,4 +84,19 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     // select ... for update => DB에 셀렉트시 다른 접근에 lock을 건다. => 꼭 써야하는 경우가 아니라면 다른 기능으로 풀어내는게 좋다고 함.
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     List<Member> findLockByUsername(String username);
+
+//    List<UsernameOnlyDto> findProjectionsByUsername(@Param("username") String username);
+    // 제네릭을 활용해서 동적으로도 쓸 수 있다.
+    <T> List<T> findProjectionsByUsername(@Param("username") String username, Class<T> type);
+
+    @Query(value = "select * from member where username = ?", nativeQuery = true)
+    Member findByNativeQuery(String username);
+
+    @Query(
+            value = "select m.member_id as id, m.username, t.name as teamName " +
+                    "from member m left join team t",
+            countQuery = "select count(*) from member",
+            nativeQuery = true
+    )
+    Page<MemberProjection> findByNativeProjection(Pageable pageable);
 }

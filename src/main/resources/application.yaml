@@ -13,6 +13,13 @@ spring:
         show_sql: true
         format_sql: true
 
+  data:
+    web:
+      pageable:
+        default-page-size: 10 # Pageable basic page size Custom(Global)
+        max-page-size: 2000
+#        one-indexed-parameters: true # Page 0, 1 => first Page
+
 logging.level:
   org.hibernate.sql: trace
 #  org.hibernate.type: trace
